@@ -9,7 +9,6 @@ contract Rental {
     address[] public renters;
     int public idCount;
 
-
     /* MAPPING */
 
     // map the rental ID to an Apartment
@@ -19,14 +18,20 @@ contract Rental {
     /* EVENTS */
 
     event ForRent (uint id);
-    event Rented (uint id);
     event Deposited (uint id);
+    event Rented (uint id);
+    event Cancelled (uint id);
     event Refunded (address accountToRefund, uint id);
-
+    event OffMarket (uint id);
 
     /* MODIFIERS */
 
-    modifier forRent(uint _id) { require(apartments[_id]) };
+    modifier forRent (uint _id) { require(apartments[_id].state == "ForRent"); _; };
+    modifier deposited (uint _id) { require(apartments[_id].state == "Deposited"); _; };
+    modifier rented (uint _id) { require(apartments[_id].state == "Rented"); _; };
+    modifier cancelled (uint _id) { require(apartments[_id].state == "Cancelled"); _; };
+    modifier refunded (uint _id) { require(apartments[_id].state == "Refunded"); _; };
+    modifier offMarket (uint _id) { require(apartments[_id].state == "OffMarket"); _; };
 
     /* STRUCTS */
 
@@ -50,17 +55,30 @@ contract Rental {
 
     /* ENUMERATORS */
 
-    enum State { ForRent, Deposited, Rented }
+    enum State { ForRent, Deposited, Rented, Cancelled, Refunded, OffMarket }
 
     /* VIEWS */
 
-    function getSellers() public view returns (address[50]) {
+    function getSeller(uint _id) public view returns (address) {
+        return apartments[_id].seller;
+    }
+
+    function getSellers() public view returns (address[]) {
         return sellers;
     }
 
-    function getRenters() public view returns (address[50]) {
+    function getRenter(uint _id) public view returns (address) {
+        return apartments[_id].seller;
+    }
+
+    function getRenters() public view returns (address[]) {
         return renters;
     }
+
+    function getDeposit(uint _id) public view returns (uint){
+        return apartments[_id].deposit;
+    }
+
 
     /* FUNCTIONS */
 
