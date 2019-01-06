@@ -8,9 +8,3 @@ during this project.
 * Do I need to predetermine the array size?
 
 ### 1/5
-* When do I start the website?
-  - How should the webpages be structured?
-* Work order -  
-  1. Develop basic contracts
-  2. develop basic webpage
-  3. connect MetaMask to webpage
