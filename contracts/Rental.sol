@@ -11,12 +11,13 @@ contract Rental {
 
     /* MAPPING */
 
-    // map the rental ID to an Apartment
     mapping (uint => Apartment) public apartments;
     mapping (address => bool) public isRenter;
+    mapping (address => uint) internal balances;
 
     /* EVENTS */
 
+    event apartmentAdded (uint id);
     event ForRent (uint id);
     event Deposited (uint id);
     event Rented (uint id);
@@ -27,20 +28,27 @@ contract Rental {
     /* MODIFIERS */
 
     modifier forRent (uint _id) { require(apartments[_id].state == "ForRent"); _; };
+    modifier canDeposit (uint _id) { require(balances[msg.sender] >= msg.value); _; };
+    modifier depositedEnough (uint _id) { require(apartments[_id].deposit <= msg.value); _; };
     modifier deposited (uint _id) { require(apartments[_id].state == "Deposited"); _; };
     modifier rented (uint _id) { require(apartments[_id].state == "Rented"); _; };
     modifier cancelled (uint _id) { require(apartments[_id].state == "Cancelled"); _; };
+    modifier canCancel (uint _id) { require(apartments[_id].seller == msg.sender || apartments[_id].buyer == msg.sender); _; };
     modifier refunded (uint _id) { require(apartments[_id].state == "Refunded"); _; };
     modifier offMarket (uint _id) { require(apartments[_id].state == "OffMarket"); _; };
+
+    /* ENUMERATORS */
+
+    enum State { OffMarket, OnMarket, ForRent, Deposited, Rented, Cancelled, Refunded }
 
     /* STRUCTS */
 
     struct Apartment {
-        uint id;
         string location;
-        uint price;
-        uint deposit;
+        uint id;
         uint state;
+        uint deposit;
+        uint price;
         address seller;
         address renter;
     }
@@ -53,10 +61,6 @@ contract Rental {
         idCount = 0;
     }
 
-    /* ENUMERATORS */
-
-    enum State { ForRent, Deposited, Rented, Cancelled, Refunded, OffMarket }
-
     /* VIEWS */
 
     function getSeller(uint _id) public view returns (address) {
@@ -67,16 +71,13 @@ contract Rental {
         return sellers;
     }
 
-    function getRenter(uint _id) public view returns (address) {
-        return apartments[_id].seller;
-    }
 
-    function getRenters() public view returns (address[]) {
-        return renters;
-    }
-
-    function getDeposit(uint _id) public view returns (uint){
+    function getDeposit(uint _id) public view returns (uint) {
         return apartments[_id].deposit;
+    }
+
+    function getPrice(uint _id) public view returns (uint) {
+        return apartments[_id].price;
     }
 
 
@@ -92,8 +93,9 @@ contract Rental {
         apartments[id] = Apartment({
             location: _location,
             id: idCount,
+            state: State.OffMarket,
+            deposit: _deposit,
             price: _price,
-            state: State.ForRent,
             seller: msg.sender,
             renter: 0
         });
@@ -101,7 +103,7 @@ contract Rental {
     }
 
     // enable seller to delete rental
-    function removeApartment()
+    function removeApartment(uint _id)
         public
         returns ()
     {
@@ -109,23 +111,27 @@ contract Rental {
     }
 
     // security deposit
-    function securityDeposit()
+    function securityDeposit(uint _id)
         public
+        returns (uint)
+    {
+        forRent(_id);
+        canDeposit(msg.sender);
+        depositedEnough(msg.sender);
+        _securityDeposit(uint _id);
+    }
+
+    function _securityDeposit(uint _id)
+        internal
         payable
         returns (uint)
     {
-        // do something
+        emit Deposited(uint _id);
     }
 
-    // confirm security deposit
-    function confirmSecurityDeposit()
-        public
-    {
-        // do something
-    }
 
     // enable renter to buy apartment
-    function rentApartment()
+    function rentApartment(uint _id)
         public
         returns ()
     {
@@ -133,12 +139,15 @@ contract Rental {
     }
 
     // cancel apartment rental
-    function cancelRental()
+    function cancelRental(uint _id)
         public
-        returns ()
+        payable
+        returns (bool)
     {
-        // do something
+        emit Cancelled(_id);
+        canCancel(_id);
     }
+
 
     // confirm cancellation
     function confirmCancelRental()
@@ -147,22 +156,7 @@ contract Rental {
         // do something
     }
 
-    // This function is for running tests
-    function getApartment(uint _id)
-        public
-        view
-        returns (uint id, string location, uint price, uint deposit, uint state,
-                 address seller, address renter)
-    {
-        id = apartments[_id].id;
-        location = apartments[_id].location;
-        price = apartments[_id].price;
-        deposit = apartments[_id].deposit;
-        state = apartments[_id].state;
-        seller = apartments[_id].seller;
-        buyer = apartments[_id].buyer;
-        return (id, location, price, deposit, state, seller, renter)
-    }
+
 
 
 
