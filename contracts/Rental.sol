@@ -63,14 +63,13 @@ contract Rental {
 
     /* VIEWS */
 
-    function getSeller(uint _id) public view returns (address) {
-        return apartments[_id].seller;
-    }
-
     function getSellers() public view returns (address[]) {
         return sellers;
     }
 
+    function getSeller(uint _id) public view returns (address) {
+        return apartments[_id].seller;
+    }
 
     function getDeposit(uint _id) public view returns (uint) {
         return apartments[_id].deposit;
@@ -133,7 +132,7 @@ contract Rental {
     // enable renter to buy apartment
     function rentApartment(uint _id)
         public
-        returns ()
+        returns (bool)
     {
         // do something
     }

@@ -53,14 +53,6 @@ contract Userbase {
         return users;
     }
 
-    function getSellers() public view returns (address[]) {
-        // do something
-    }
-
-    function getBuyers() public view returns (address[]) {
-        // do something
-    }
-
     /* FUNCTIONS */
 
     function addUser()
