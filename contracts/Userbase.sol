@@ -9,26 +9,32 @@ contract Userbase {
     /* MAPPING */
 
     mapping (uint => User) public users;
-	mapping (uint => mapping (address => bool)) renters;
-    mapping (uint => mapping (address => bool)) sellers;
+    mapping (address => bool) public isRenting;
+	// mapping (uint => mapping (address => bool)) renters;
+    // mapping (uint => mapping (address => bool)) sellers;
 
     /* EVENTS */
 
     event addUser (uint id);
+    event removeUser (uint id);
 	event bannedUser (uint id);
+    event logSelling (uint id);
+    event logRenting (uint id);
     event logDepositBalance (uint id);
     event logWithdrawBalance (uint id);
 
+
     /* MODIFIERS */
+
 
     modifier authorizedUser (uint _id) {
 		require(users[_id].banned === false);
 		require(users[_id].userAddress == msg.sender);
 		_;
 	};
-	modifier canSell (uint _id) { require(users[_id].selling === true); _; };
-	modifier canRent (uint _id) { require(users[_id].buying === true); _; };
-	modifier isRenting (uint _id) { require(users[_id].renting === true); _; };
+	modifier canSell (uint _id) { require(users[_id].sell === true); _; };
+	modifier canRent (uint _id) { require(users[_id].rent === true); _; };
+	modifier isRenting (uint _id) { require(users[_id].isRenting === true); _; };
 
 
     /* ENUMERATORS */
@@ -36,12 +42,13 @@ contract Userbase {
     /* STRUCTS */
 
     // Note: we do not need to disable deposits if user is banned.  If they're
-    // banned and try to deposit, send funds to contract owner
+    // banned and try to do anything, prevent it
     struct User {
         uint id;
         uint balance;
-        bool renting;
-        bool selling;
+        bool rent;
+        bool isRenting;
+        bool sell;
         bool banned;
         address userAddress;
     }
@@ -84,16 +91,17 @@ contract Userbase {
         return true;
     }
 
-
-
     function depositBalance(uint amount)
         public
+        payable
         returns (uint)
     {
         authorizedUser(msg.sender);
-        emit logDeposit(msg.sender);
+
+        emit logDepositBalance(msg.sender);
         return users[msg.sender].balance;
     }
+
 
     function withdrawBalance(uint amount)
         public
@@ -101,7 +109,6 @@ contract Userbase {
         returns (uint)
     {
 		authorizedUser(msg.sender);
-
         emit logWithdrawBalance(msg.sender);
     }
 
