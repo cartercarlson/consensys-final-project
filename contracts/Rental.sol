@@ -5,8 +5,6 @@ contract Rental {
     /* DECLARING VARIABLES */
 
     address public owner;
-    address[] public sellers;
-    address[] public renters;
     int public idCount;
 
     /* MAPPING */
