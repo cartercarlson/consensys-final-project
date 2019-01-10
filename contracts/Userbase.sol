@@ -23,6 +23,8 @@ contract Userbase {
     event logRenting (uint id);
     event logDepositBalance (uint id);
     event logWithdrawBalance (uint id);
+    event logEnableUserRent (uint id);
+    event logEnableUserSell (uint id);
 
 
     /* MODIFIERS */
@@ -36,6 +38,7 @@ contract Userbase {
 	modifier canSell (uint _id) { require(users[_id].sell === true); _; };
 	modifier canRent (uint _id) { require(users[_id].rent === true); _; };
 	modifier isRenting (uint _id) { require(users[_id].isRenting === true); _; };
+	modifier userExists(uint _id) { require _id > 0 && _id < idCount }
 
     /* ENUMERATORS */
 
@@ -45,12 +48,11 @@ contract Userbase {
     // banned and try to do anything, prevent it
     struct User {
         uint id;
-        uint balance;
+        address userAddress;
         bool rent;
         bool isRenting;
         bool sell;
-        bool banned;
-        address userAddress;
+        uint balance;
     }
 
 
@@ -62,12 +64,26 @@ contract Userbase {
 
     /* VIEWS */
 
-    function getUser(uint _id) public view returns (address) {
-        return users[_id].userAddress;
-    }
+    function getUser(uint _id)
+        public
+        view
+        returns (
+            uint _id,
+            address userAddress,
+            bool rent,
+            bool isRenting,
+            bool sell,
+            uint balance
+        )
+    {
+        userExists(_id);
+        User storage user = users[_id];
 
-    function getUsers() public view returns (address[]) {
-        return users;
+        address = user.userAddress;
+        rent = user.rent;
+        isRenting = user.isRenting;
+        sell = user.sell;
+        balance = user.balance;
     }
 
     /* FUNCTIONS */
@@ -80,12 +96,12 @@ contract Userbase {
         emit addUser(idCount);
         users[id] = User({
             id: idCount,
-            balance: 0,
-            renting: false,
-            selling: false,
-            canRent: false,
-            canSell: false,
             userAddress: msg.sender
+            rent: false,
+            sell: false,
+            isRenting: false,
+            balance: 0
+
         });
         return true;
     }
@@ -97,15 +113,31 @@ contract Userbase {
         permissioned[_user] = true;
     }
 
+    function enableUserRent (uint _id)
+        public
+    {
+        authorizedUser(msg.sender);
+        emit logEnableUserRent(uint _id);
+        users[_id].rent = true;
+    }
+
+
+    function enableUserSell (uint _id)
+        public
+    {
+        authorizedUser(msg.sender);
+        emit logEnableUserSell(uint _id);
+        users[_id].sell = true;
+    }
 
     function depositBalance(uint amount)
         public
-        payable
         returns (uint)
     {
         authorizedUser(msg.sender);
 
         emit logDepositBalance(msg.sender);
+        users[msg.sender] += msg.value;
         return users[msg.sender].balance;
     }
 
