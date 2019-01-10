@@ -9,6 +9,7 @@ contract Userbase {
     /* MAPPING */
 
     mapping (uint => User) public users;
+    mapping (address => bool) public permissioned;
     mapping (address => bool) public isRenting;
 	// mapping (uint => mapping (address => bool)) renters;
     // mapping (uint => mapping (address => bool)) sellers;
@@ -28,14 +29,13 @@ contract Userbase {
 
 
     modifier authorizedUser (uint _id) {
-		require(users[_id].banned === false);
-		require(users[_id].userAddress == msg.sender);
+        require (permissioned[msg.sender] === true);
+		require (users[_id].userAddress == msg.sender);
 		_;
 	};
 	modifier canSell (uint _id) { require(users[_id].sell === true); _; };
 	modifier canRent (uint _id) { require(users[_id].rent === true); _; };
 	modifier isRenting (uint _id) { require(users[_id].isRenting === true); _; };
-
 
     /* ENUMERATORS */
 
@@ -85,11 +85,18 @@ contract Userbase {
             selling: false,
             canRent: false,
             canSell: false,
-            banned: false,
             userAddress: msg.sender
         });
         return true;
     }
+
+    function addToPermissioned (address _user)
+        public
+    {
+        require (buyer != 0x0);
+        permissioned[_user] = true;
+    }
+
 
     function depositBalance(uint amount)
         public
