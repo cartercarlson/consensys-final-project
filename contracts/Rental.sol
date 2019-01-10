@@ -1,5 +1,7 @@
 pragma solidity ^0.4.20;
 
+import "Userbase.sol";
+
 contract Rental {
 
     /* DECLARING VARIABLES */
@@ -31,20 +33,21 @@ contract Rental {
     modifier deposited (uint _id) { require(apartments[_id].state == "Deposited"); _; };
     modifier rented (uint _id) { require(apartments[_id].state == "Rented"); _; };
     modifier cancelled (uint _id) { require(apartments[_id].state == "Cancelled"); _; };
-    modifier canCancel (uint _id) { require(apartments[_id].seller == msg.sender || apartments[_id].buyer == msg.sender); _; };
-    modifier refunded (uint _id) { require(apartments[_id].state == "Refunded"); _; };
+    modifier canCancel (uint _id) { require(apartments[_id].seller == msg.sender || apartments[_id].renter == msg.sender); _; };
     modifier offMarket (uint _id) { require(apartments[_id].state == "OffMarket"); _; };
+	modifier apartmentExists(uint _id) { require _id > 0 && _id <= idCount }
 
     /* ENUMERATORS */
 
-    enum State { OffMarket, OnMarket, ForRent, Deposited, Rented, Cancelled, Refunded }
+    enum State { OffMarket, OnMarket, ForRent, Deposited, Rented, Ended }
 
     /* STRUCTS */
 
     struct Apartment {
-        string location;
         uint id;
+		string location;
         uint state;
+        uint term;
         uint deposit;
         uint price;
         address seller;
@@ -60,6 +63,30 @@ contract Rental {
     }
 
     /* VIEWS */
+
+	function getApartment(uint _id)
+		public
+		view
+		returns (
+			uint _id,
+			string location,
+			uint state, // NOTE: is this correct?
+			uint term,
+			uint deposit,
+			uint price,
+			address seller,
+			address renter
+		)
+	{
+		apartmentExists(_id);
+		Apartment storage apartment = apartments[_id];
+		location = apartment.location;
+		state = apartment.state;
+		deposit = apartment.deposit;
+		price = apartment.price;
+		seller = apartment.seller;
+		renter = apartment.renter;
+	}
 
     function getSellers() public view returns (address[]) {
         return sellers;
@@ -81,16 +108,18 @@ contract Rental {
     /* FUNCTIONS */
 
     // enable seller to post rental
-    function addApartment(string _location, string _price, string _deposit)
+    function addApartment(string _location, string _term, string _deposit, string _price)
         public
         returns (bool)
     {
+        authorizedUser(msg.sender);
         idCount = idCount + 1;
         emit ForRent(idCount);
         apartments[id] = Apartment({
-            location: _location,
             id: idCount,
+			location: _location,
             state: State.OffMarket,
+            term: _term,
             deposit: _deposit,
             price: _price,
             seller: msg.sender,
@@ -152,11 +181,6 @@ contract Rental {
     {
         // do something
     }
-
-
-
-
-
 
 
 }

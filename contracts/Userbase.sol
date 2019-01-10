@@ -38,7 +38,7 @@ contract Userbase {
 	modifier canSell (uint _id) { require(users[_id].sell === true); _; };
 	modifier canRent (uint _id) { require(users[_id].rent === true); _; };
 	modifier isRenting (uint _id) { require(users[_id].isRenting === true); _; };
-	modifier userExists(uint _id) { require _id > 0 && _id < idCount }
+	modifier userExists(uint _id) { require _id > 0 && _id <= idCount }
 
     /* ENUMERATORS */
 
