@@ -26,9 +26,7 @@ contract Userbase {
     event logEnableUserRent (uint id);
     event logEnableUserSell (uint id);
 
-
     /* MODIFIERS */
-
 
     modifier authorizedUser (uint _id) {
         require (permissioned[msg.sender] === true);
